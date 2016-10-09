@@ -1,62 +1,59 @@
 #include<stdio.h>
 #include<stdlib.h>
+#define  REPORT_ERROR  {printf("syntax error!\n");exit(0);}
+
+void match(int t);
+void expr();
+void term();
+void factor();
+void getToken();
+bool isDigit(int t);
+bool isChar(int t);
+bool isOP(int t);
 
 enum {
-	NONE = 0, ID, NUM, OTHER
+	NONE = 0, ID, NUM, OP
 };
 int lookahead = 0, tokenval = NONE, tokentype = NONE;
 char idval[20];
-void match(int t);
-void expr(); void term();void rest1();
-void factor();void rest2();void getToken();
-
 
 void match(int t) {
 	
 	if (lookahead == t) {
 		getToken();//continue get a token
 	}
-	else printf("syntax error\n");
+	else REPORT_ERROR
 }
 void term(){
-	factor(); rest2();
+	factor();
+	while (true) {
+		if (lookahead == '*') {
+			match('*'); factor(); printf("* ");
+		}
+		else if (lookahead == '/') {
+			match('/'); factor(); printf("/ ");
+		}
+		else if ((lookahead == ' ') || (lookahead == '\t') || (lookahead == '\n') || (lookahead == '-') || (lookahead == '+'))
+			return;
+		else REPORT_ERROR
+	}
 }
 void expr(){
-	term(); rest1();
+	term(); 
+	while (true) {
+		if (lookahead == '+') {
+			match('+'); term(); printf("+ ");
+		}
+		else if (lookahead == '-') {
+			match('-'); term(); printf("- ");
+		}
+		else if ((lookahead == ' ') || (lookahead == '\t') || (lookahead == '\n')) return;
+		else REPORT_ERROR
+	}
 }
-void rest1()
-{
-	if (lookahead == '+'){
-		match('+');term(); printf("+ "); rest1();
-	}
-	else if (lookahead  == '-'){
-		match('-'); term(); printf("- "); rest1();
-	}
-	else if((lookahead == ' ')||(lookahead == '\t')||(lookahead == '\n')) ;
-	else {
-		printf("syntax error!\n");
-		exit(0);
-	};
-}
-void rest2()
-{
-	if (lookahead == '*'){
-		match('*'); factor(); printf("* "); rest2();
-	}
-	else if (lookahead == '/'){
-		match('/'); factor(); printf("/ "); rest2();
-	}
-	
-	else if ((lookahead == ' ') || (lookahead == '\t') || (lookahead == '\n'));
-	else if ((lookahead == '-') || (lookahead == '+'))return;
-	else {
-		printf("syntax error!\n");
-		exit(0);
-	};
-}
+
 void factor()
 {
-	int n;
 	if (lookahead  == '(') {
 		match('('); expr(); match(')');
 	}
@@ -66,6 +63,7 @@ void factor()
 	else if (tokentype == ID) {
 		printf("%s ", idval); getToken();
 	}
+	else REPORT_ERROR
 }
 
 bool isDigit(int t) {
@@ -77,7 +75,11 @@ bool isChar(int t) {
 		return true;
 	else return false;
 }
-
+bool isOP(int t) {
+	if ((t == '+') || (t == '-') || (t == '*') || (t == '/')||(t == '(')||(t == ')')) 
+		return true;
+	else return false;
+}
 void getToken()
 {
 	int tmp = 0;//reserve previous lookahead
@@ -110,15 +112,24 @@ void getToken()
 			lookahead = tmp;
 			tokentype = ID; return;
 		}
-		else {
+		else if(isOP(lookahead)){
 			tokenval = lookahead;
-			tokentype = OTHER; return;
+			tokentype = OP; return;
 		}
+		else REPORT_ERROR
 	}
 }
 void main() 
 {
-	getToken();
-	expr();
+	char c = 'y';
+	while (c == 'y') {
+		printf("\nPlease input a infix arithmetic expression:\n  ");
+		getToken();
+		printf("Its postfix expression is:\n  ");
+		expr();
+		printf("\nContinue? y/n: ");
+		c = getchar();
+		getchar();//return carriage
+	}
 	return;
 }
