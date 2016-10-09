@@ -4,7 +4,7 @@
 enum {
 	NONE = 0, ID, NUM, OTHER
 };
-int lookahead = 0, tokenval = NONE, tokename = NONE;
+int lookahead = 0, tokenval = NONE, tokentype = NONE;
 char idval[20];
 void match(int t);
 void expr(); void term();void rest1();
@@ -60,10 +60,10 @@ void factor()
 	if (lookahead  == '(') {
 		match('('); expr(); match(')');
 	}
-	else if (tokename == NUM) {
+	else if (tokentype == NUM) {
 		printf("%d ", tokenval); getToken();
 	}
-	else if (tokename == ID) {
+	else if (tokentype == ID) {
 		printf("%s ", idval); getToken();
 	}
 }
@@ -84,9 +84,9 @@ void getToken()
 	int i = 0;
 	while (true) {
 		lookahead = getchar();
-		if (lookahead == ' ' || lookahead == '\t') tokename = NONE;
+		if (lookahead == ' ' || lookahead == '\t') tokentype = NONE;
 		else if (lookahead == '\n'){//only one line expression
-			tokename = NONE; return;
+			tokentype = NONE; return;
 		}
 		else if (isDigit(lookahead)) {
 			tokenval = 0;
@@ -97,7 +97,7 @@ void getToken()
 			}
 			ungetc(lookahead, stdin);//return back a char to stdin
 			lookahead = tmp;//recover lookahead
-			tokename = NUM; return;
+			tokentype = NUM; return;
 		}
 		else if(isChar(lookahead)){
 			while (isChar(lookahead)||isDigit(lookahead)) {
@@ -108,11 +108,11 @@ void getToken()
 			idval[i] = '\0';
 			ungetc(lookahead, stdin);
 			lookahead = tmp;
-			tokename = ID; return;
+			tokentype = ID; return;
 		}
 		else {
 			tokenval = lookahead;
-			tokename = OTHER; return;
+			tokentype = OTHER; return;
 		}
 	}
 }
