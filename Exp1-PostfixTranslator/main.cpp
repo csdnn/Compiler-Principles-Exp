@@ -1,19 +1,20 @@
 #include<stdio.h>
+#include<stdlib.h>
+
 enum {
-	NONE = 0, ID, NUM
+	NONE = 0, ID, NUM, OTHER
 };
-int lookahead = 0;
-int tokenval = NONE, tokename = NONE;
+int lookahead = 0, tokenval = NONE, tokename = NONE;
+char idval[20];
 void match(int t);
-void expr();
-void term();
-void rest1();
-void factor();
-void rest2();
-void lexan();
+void expr(); void term();void rest1();
+void factor();void rest2();void getToken();
+
+
 void match(int t) {
+	
 	if (lookahead == t) {
-		lexan();//¼ÌÐø¶ÁÈ¡
+		getToken();//continue get a token
 	}
 	else printf("syntax error\n");
 }
@@ -31,7 +32,11 @@ void rest1()
 	else if (lookahead  == '-'){
 		match('-'); term(); printf("- "); rest1();
 	}
-	else;
+	else if((lookahead == ' ')||(lookahead == '\t')||(lookahead == '\n')) ;
+	else {
+		printf("syntax error!\n");
+		exit(0);
+	};
 }
 void rest2()
 {
@@ -41,7 +46,13 @@ void rest2()
 	else if (lookahead == '/'){
 		match('/'); factor(); printf("/ "); rest2();
 	}
-	else;
+	
+	else if ((lookahead == ' ') || (lookahead == '\t') || (lookahead == '\n'));
+	else if ((lookahead == '-') || (lookahead == '+'))return;
+	else {
+		printf("syntax error!\n");
+		exit(0);
+	};
 }
 void factor()
 {
@@ -50,34 +61,31 @@ void factor()
 		match('('); expr(); match(')');
 	}
 	else if (tokename == NUM) {
-		printf("%d ", tokenval); lexan();
+		printf("%d ", tokenval); getToken();
 	}
 	else if (tokename == ID) {
-		printf("%c ", tokenval); lexan();
+		printf("%s ", idval); getToken();
 	}
 }
 
 bool isDigit(int t) {
-	if (t <= '9'&&t >= '0') return true;
+	if (t <= '9'&& t >= '0') return true;
 	else return false;
 }
 bool isChar(int t) {
-	if ((t <= 'Z') && (t >= 'A'))return true;
-	else if ((t <= 'z') && (t >= 'a'))return true;
-	else if (t == '_')return true;
+	if((t <= 'Z') && (t >= 'A')||(t <= 'z') && (t >= 'a')||(t == '_'))
+		return true;
 	else return false;
 }
 
-void lexan()
+void getToken()
 {
-	//int t;
-	while (1) {
-		int tmp;
+	int tmp = 0;//reserve previous lookahead
+	int i = 0;
+	while (true) {
 		lookahead = getchar();
-		if (lookahead == ' ' || lookahead == '\t')
-			;
-		else if (lookahead == '\n')
-		{
+		if (lookahead == ' ' || lookahead == '\t') tokename = NONE;
+		else if (lookahead == '\n'){//only one line expression
 			tokename = NONE; return;
 		}
 		else if (isDigit(lookahead)) {
@@ -87,24 +95,30 @@ void lexan()
 				tmp = lookahead;
 				lookahead = getchar();
 			}
-			ungetc(lookahead, stdin);//»ØÍË
-			lookahead = tmp;
+			ungetc(lookahead, stdin);//return back a char to stdin
+			lookahead = tmp;//recover lookahead
 			tokename = NUM; return;
 		}
 		else if(isChar(lookahead)){
-			tokenval = lookahead;
-			tokename = ID;
-			return;
+			while (isChar(lookahead)||isDigit(lookahead)) {
+				idval[i++] = lookahead;
+				tmp = lookahead;
+				lookahead = getchar();
+			}
+			idval[i] = '\0';
+			ungetc(lookahead, stdin);
+			lookahead = tmp;
+			tokename = ID; return;
 		}
 		else {
 			tokenval = lookahead;
-			tokename = NONE; return;
+			tokename = OTHER; return;
 		}
 	}
 }
 void main() 
 {
-	lexan();
+	getToken();
 	expr();
 	return;
 }
